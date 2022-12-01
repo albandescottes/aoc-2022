@@ -6,19 +6,26 @@ class Day1 extends Day {
         super(1);
     }
 
-    solveForPartOne(input: string): string {
+    extractDatasAndSort(input: string): number[] {
         const data = input.split('\n');
-        return data.filter((v,i,arr) => i !== 0 ? arr[i-1] < v : false).length.toString();
+        return data.reduce((acc, value) => {
+            if (value !== "") {
+                acc[acc.length - 1] = (acc.at(-1) || 0) + (+value); 
+                return acc;
+            } 
+            return [...acc, 0];
+        }, [0] as number[])
+        .sort((a,b) => b-a);
+    }
+
+    solveForPartOne(input: string): string {
+        const [max, ..._] = this.extractDatasAndSort(input);
+        return `${max}`;
     }
 
     solveForPartTwo(input: string): string {
-        const data = input.split('\n');
-        const dataV2 = data.map((v,i,arr) => {
-            const prev = arr[i-1] ?? 0;
-            const next = arr[i+1] ?? 0;
-            return v+prev+next;
-        });
-        return dataV2.slice(0,dataV2.length-2).filter((v,i,arr) => i !== 0 ? arr[i-1] < v : false).length.toString();
+        const [one,two,three, ..._] = this.extractDatasAndSort(input);
+        return `${one+two+three}`;
     }
 }
 
