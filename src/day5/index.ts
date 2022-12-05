@@ -46,11 +46,9 @@ class Day5 extends Day {
   solveForPartOne(input: string): string {
     const { stacks, ords }: Game = this.parseInput(input);
     ords.forEach((o) => {
-      for (let i = 0; i < o.cnt; i++) {
-        const out = stacks[o.s].pop();
-        if (out) {
-          stacks[o.e].push(out);
-        }
+      const out = stacks[o.s].splice(-o.cnt, o.cnt).reverse();
+      if (out) {
+        stacks[o.e].push(...out);
       }
     });
     const res = stacks.map((s) => s.at(-1)).join("");
