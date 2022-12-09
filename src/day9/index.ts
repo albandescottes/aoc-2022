@@ -14,42 +14,27 @@ const fnAdd: { [key in Order]: (arg: numbers) => numbers } = {
   R: ([x, y]: numbers) => [x + 1, y],
 };
 
+const flatOrder = ([ord, len]: string[]): Order[] =>
+  Array<Order>(+len).fill(ord as Order);
+
 class Day9 extends Day {
   constructor() {
     super(9);
   }
 
-  flatOrder = (s: string): Order[] => {
-    const [dir, len] = s.split(" ");
-    return Array<Order>(+len).fill(dir as Order);
-  };
-
   flatData(input: string): Order[] {
     return input
       .split("\n")
-      .map((l) => this.flatOrder(l))
+      .map((l) => flatOrder(l.split(" ")))
       .flatMap((arr) => arr);
   }
 
-  areHandTLinked([xH, yH]: numbers, [xT, yT]: numbers): boolean {
+  areNumbersLinked([xH, yH]: numbers, [xT, yT]: numbers): boolean {
     return Math.abs(xT - xH) <= 1 && Math.abs(yT - yH) <= 1;
   }
-  moveTNearH([xH, yH]: numbers, [xT, yT]: numbers, idx?: number): numbers {
-    const xOffset = Math.abs(xH - xT);
-    const xOffsetSign = (xH - xT) / xOffset;
-    const yOffset = Math.abs(yH - yT);
-    const yOffsetSign = (yH - yT) / yOffset;
-    if (
-      (xOffset === 2 && yOffset === 1) ||
-      (xOffset === 1 && yOffset === 2) ||
-      (xOffset === 2 && yOffset === 2)
-    ) {
-      return [xT + xOffsetSign, yT + yOffsetSign];
-    } else if (xOffset === 2) {
-      return [xT + xOffsetSign, yT];
-    } else {
-      return [xT, yT + yOffsetSign];
-    }
+  moveToHead([xH, yH]: numbers, [xT, yT]: numbers): numbers {
+    const fn = (x1: number, x2: number) => ((x1 - x2) / Math.abs(x1 - x2)) | 0;
+    return [xT + fn(xH, xT), yT + fn(yH, yT)];
   }
 
   isAlreadyVisited(pos: numbers, visited: numbers[]): boolean {
@@ -57,23 +42,25 @@ class Day9 extends Day {
   }
 
   moveSnakeForNchild(data: Order[], n = 1): number {
-    let h: numbers = [0, 0];
-    let ts: numbers[] = Array(n).fill([0, 0]);
-    const tVisited: numbers[] = [[0, 0]];
+    const isTail = (i: number) => i === n - 1;
+    const s: numbers = [0, 0];
+    let head: numbers = s;
+    const ns: numbers[] = Array(n).fill(s);
+    const visited: numbers[] = [s];
     data.forEach((dir) => {
-      h = fnAdd[dir](h);
-      ts.forEach((t, i) => {
-        const base = i === 0 ? h : ts[i - 1];
-        if (!this.areHandTLinked(base, t)) {
-          const newPos = this.moveTNearH(base, t);
-          ts[i] = newPos;
-          if (i === ts.length - 1 && !this.isAlreadyVisited(newPos, tVisited)) {
-            tVisited.push(newPos);
+      head = fnAdd[dir](head);
+      ns.forEach((n, i) => {
+        const base = i === 0 ? head : ns[i - 1];
+        if (!this.areNumbersLinked(base, n)) {
+          const pos = this.moveToHead(base, n);
+          ns[i] = pos;
+          if (isTail(i) && !this.isAlreadyVisited(pos, visited)) {
+            visited.push(pos);
           }
         }
       });
     });
-    return tVisited.length;
+    return visited.length;
   }
 
   solveForPartOne(input: string): string {
