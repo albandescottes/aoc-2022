@@ -10,6 +10,8 @@ import day7 from './day7/index';
 import day8 from './day8/index';
 import day9 from './day9/index';
 import day10 from './day10/index';
+import day11 from './day11/index';
+import day12 from './day12/index';
 // MORE IMPORTS HERE
 const days: Day[] = [
     day0,
@@ -23,6 +25,8 @@ const days: Day[] = [
     day8,
     day9,
     day10,
+    day11,
+    day12,
     // MORE DAYS HERE
 ];
 
