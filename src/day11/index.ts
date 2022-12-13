@@ -3,9 +3,9 @@ import { Day } from "../day";
 interface Monkey {
   id: number;
   items: any[];
-  op: (n: bigint) => bigint;
-  div: bigint;
-  mod: (n: bigint) => number;
+  op: (n: number) => number;
+  div: number;
+  mod: (n: number) => number;
   cnt: number;
 }
 
@@ -24,35 +24,21 @@ class Day11 extends Day {
     return chunks.map((c) => {
       const [l1, l2, l3, l4, l5, l6] = c;
       const id = l1.match(nRgx)?.at(0);
-      const items = l2.match(nRgx)!.map((v) => BigInt(v));
+      const items = l2.match(nRgx)!.map((v) => +v);
       const o = l3.split(" = ")[1];
       const div = l4.match(nRgx)?.at(0);
       const t = l5.match(nRgx)?.at(0);
       const f = l6.match(nRgx)?.at(0);
-      const [l, m, r] = o.split(" ");
-      const op = (n: bigint) => {
-        // cannot use eval cause js is shit
-        const ll = l === "old" ? n : BigInt(l);
-        const rr = r === "old" ? n : BigInt(r);
-        if (m === "+") {
-          return ll + rr;
-        } else if (m === "*") {
-          return ll * rr;
-        } else if (m === "/") {
-          return ll / rr;
-        } else {
-          return ll - rr;
-        }
-      };
-      const mod = (n: bigint) => (BigInt(n) % BigInt(div!) == 0n ? +t! : +f!);
-      return { id: +id!, items, op, div: BigInt(div!), mod, cnt: 0 } as Monkey;
+      const op = (n: number) => eval(o.replace(/old/g, `${n}`));
+      const mod = (n: number) => (n % +div! == 0 ? +t! : +f!);
+      return { id: +id!, items, op, div: +div!, mod, cnt: 0 } as Monkey;
     });
   }
 
   solvePuzzle(
     n: number,
     monkeys: Monkey[],
-    fn: (v: bigint) => bigint
+    fn: (v: number) => number
   ): Monkey[] {
     for (let i = 0; i < n; i++) {
       monkeys.forEach((m, i) => {
@@ -61,7 +47,7 @@ class Day11 extends Day {
           const val = fn(afterOp);
           const idx = m.mod(val);
           return { idx, val };
-        }) as { idx: number; val: bigint }[];
+        }) as { idx: number; val: number }[];
         monkeys[i] = {
           ...m,
           cnt: m.cnt + ops.length,
@@ -75,23 +61,28 @@ class Day11 extends Day {
     return monkeys;
   }
 
+  getProdTwoMaxM(monkeys: Monkey[]): number {
+    return monkeys
+      .map((m) => m.cnt)
+      .sort((a, b) => b - a)
+      .slice(0, 2)
+      .reduce((a, b) => a * b, 1);
+  }
+
   solveForPartOne(input: string): string {
     const monkeys = this.parseMonkey(input);
-    const fn = (v: bigint) => v / 3n;
-    const [m1, m2, _] = this.solvePuzzle(20, monkeys, fn).sort(
-      (a, b) => b.cnt - a.cnt
-    );
-    return `${m1.cnt * m2.cnt}`;
+    const fn = (v: number) => Math.floor(v / 3);
+    const res = this.getProdTwoMaxM(this.solvePuzzle(20, monkeys, fn));
+
+    return `${res}`;
   }
 
   solveForPartTwo(input: string): string {
     const monkeys = this.parseMonkey(input);
-    const modulo = monkeys.map(m => m.div).reduce((acc, d) => acc*d, 1n)
-    const fn = (v: bigint) => v % modulo;
-    const [m1, m2, _] = this.solvePuzzle(10000, monkeys, fn).sort(
-      (a, b) => b.cnt - a.cnt
-    );
-    return `${m1.cnt * m2.cnt}`;
+    const modulo = monkeys.map((m) => m.div).reduce((acc, d) => acc * d, 1);
+    const fn = (v: number) => v % modulo;
+    const res = this.getProdTwoMaxM(this.solvePuzzle(10000, monkeys, fn));
+    return `${res}`;
   }
 }
 
